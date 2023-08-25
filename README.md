@@ -11,7 +11,7 @@ AMIDR runs on python with Jupyter Notebook. To begin, follow these instructions:
 - Figures: All figures and their construction.
 - Fresh Data: Raw data not yet analyzed. Feel free to use this for practice.
 - Protocols: BioLogic protocols used for AMIDR testing.
-- Batch Analysis.ipynb: One-button notebook for updating analysis.
+- Batch Analysis.ipynb: One-button notebook for bulk updating Analyzed Data.
 - Dev Interface.ipynb: Similar to User Interface except used for future development.
 - User Interface.ipynb: Where to perfrom AMIDR analysis.
 - amidr.py: Backend code for AMIDR analysis. Experienced users can feel free to edit.
