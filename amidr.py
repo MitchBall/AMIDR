@@ -65,15 +65,15 @@ class BIOCONVERT():
             massVal = float(massText.group(1))
             massUnit = massText.group(2).strip()
             if massUnit != 'mg':
-                print('Mass Unit: ' + massUnit)
-                print('Please edit first file to express mass in mg so that specific capacity is accurately calculated')
+                print("Mass Unit: " + massUnit)
+                print("Please edit first file to express mass in mg so that specific capacity is accurately calculated")
             
             capacityText = re.search('Battery capacity : (\d+.?\d+) (.+)', ''.join(header))
             capacityVal = float(capacityText.group(1))
             capacityUnit = capacityText.group(2).strip()
             if capacityUnit != 'mA.h':
-                print('Capacity Unit: ' + capacityUnit + '100')
-                print('Please edit first file to express capacity in mA.h so that specific capacity and rates are accurately calculated')
+                print("Capacity Unit: " + capacityUnit + "100")
+                print("Please edit first file to express capacity in mA.h so that specific capacity and rates are accurately calculated")
             capacityUnit = capacityUnit.replace('.h', 'Hr')
             
             startText = re.search('Technique started on : (.+)', ''.join(header))
@@ -608,7 +608,7 @@ class AMIDR():
         # If does not exist, create dir.
         if self.dst.is_dir() is False and export_data is True:
             self.dst.mkdir()
-            print('Create directory: {}'.format(self.dst))
+            print("Create directory: {}".format(self.dst))
         self.src = Path(path)
         
         self.uhpc_file = self.src / uhpc_file
@@ -646,7 +646,7 @@ class AMIDR():
             
         m = re.search('Cell: .+?(?=,|\\n)', header)
         m = m.group(0).split()
-        self.cellname = " ".join(m[1:])
+        self.cellname = ' '.join(m[1:])
         
         #self.cellname = headlines[1][-1]
         #self.mass = float(headlines[4][-1]) / 1000
@@ -661,9 +661,9 @@ class AMIDR():
             #hline = f.readline()
         #    hline = headlines[11]
                
-        print('Working on cell: {}'.format(self.cellname))
-        print('Positive electrode active mass: {} g'.format(self.mass))
-        print('Input cell capacity: {} Ah'.format(round(self.input_cap, 10)))
+        print("Working on cell: {}".format(self.cellname))
+        print("Positive electrode active mass: {} g".format(self.mass))
+        print("Input cell capacity: {} Ah".format(round(self.input_cap, 10)))
         
         self.df = pd.read_csv(self.uhpc_file, header = nskip)
         
@@ -703,22 +703,22 @@ class AMIDR():
         dt = t[1:] - t[:-1]
         inds = np.where(dt < 0.0)[0]
         if len(inds) > 0:
-            print('Indices being adjusted due to time non-monotonicity: {}'.format(inds))
+            print("Indices being adjusted due to time non-monotonicity: {}".format(inds))
             self.df['Time'][inds+1] = (t[inds] + t[inds+2])/2
             self.df['Capacity'][inds+1] = (cap[inds] + cap[inds+2])/2
         # Adjust data where potential is negative.
         inds = self.df.index[self.df['Potential'] < 0.0].tolist()
         if len(inds) > 0:
-            print('Indices being adjusted due to negative voltage: {}'.format(inds))
+            print("Indices being adjusted due to negative voltage: {}".format(inds))
             self.df['Potential'][inds] = (t[inds-1] + t[inds+1])/2
         
         if 'Label Potential' not in self.df:
             self.df['Label Potential'] = self.df['Potential'].copy()
         elif force2e:
             self.df['Potential'] = self.df['Label Potential'].copy()
-            print('3-electrode data detected. Ignoring working potential and using complete cell potential for everything. [NOT RECCOMMENDED]')
+            print("3-electrode data detected. Ignoring working potential and using complete cell potential for everything. [NOT RECCOMMENDED]")
         else:
-            print('3-electrode data detected. Using working potential for calculations and complete cell potential for labelling.')
+            print("3-electrode data detected. Using working potential for calculations and complete cell potential for labelling.")
         
         #plt.plot(self.df['Capacity'], self.df['Potential'])
         
@@ -730,8 +730,8 @@ class AMIDR():
         if use_input_cap:
             self.capacity = self.input_cap
         else:
-            print('Specific Capacity achieved by signature curves: {0:.2f} mAh/g'.format(self.spec_cap*1000))
-            print('Using {:.8f} Ah to compute rates.'.format(self.capacity))
+            print("Specific Capacity achieved by signature curves: {0:.2f} mAh/g".format(self.spec_cap*1000))
+            print("Using {:.8f} Ah to compute rates.".format(self.capacity))
 
         self.caps, self.cumcaps, self.volts, self.fcaps, self.rates, self.eff_rates, self.currs, \
         self.ir, self.dqdv, self.resistdrop, self.icaps, self.avg_caps, self.ivolts, self.cvolts, \
@@ -759,27 +759,22 @@ class AMIDR():
             writer.close()
 
     def _find_sigcurves(self):
-        """
-        Use control "step" to find sequence of charge/discharge - OCV 
-        characteristic of signature curves.
-        """
+        # Use control "step" to find sequence of charge/discharge - OCV characteristic of signature curves.
+        
         newdf = self.df.drop_duplicates(subset = ['Step', 'Prot_step'])
         steps = newdf['Step'].values
         prosteps = newdf['Prot_step'].values
         ocv_inds = np.where(steps == 0)[0]
         
         if self.single_p is False:
-            #print(ocv_inds)
             # Require a min of 3 OCV steps with the same step before and after
             # to qualify as a signature curve.
-            #print(steps[2], steps[6])
+            
             for i in range(len(ocv_inds)):
-                #print(ocv_inds[i], steps[ocv_inds[i] - 1], steps[ocv_inds[i+2] + 1])
                 if steps[ocv_inds[i] - 1] == steps[ocv_inds[i+2] + 1]:
                     first_sig_step = prosteps[ocv_inds[i] - 1]
                     break
             
-            #last_sig_step = None
             for i in range(len(ocv_inds)):
                 ind = -i - 1
                 if steps[ocv_inds[ind] + 1] != steps[ocv_inds[ind] - 1]:
@@ -790,15 +785,6 @@ class AMIDR():
                     last_sig_step = prosteps[ocv_inds[ind] + 1]
                     break
                     
-                #print(ocv_inds[-i-1], steps[ocv_inds[-i-1] - 1], steps[ocv_inds[-i-1] + 1])
-                #if len(steps) > ocv_inds[-i-1] + 3:
-                #    if steps[ocv_inds[-i-1]] != steps[ocv_inds[-i-1] + 2]:
-                #        last_sig_step = prosteps[ocv_inds[-i-1] + 1]
-                #        break
-                #if (steps[ocv_inds[-i-1] - 1] != steps[ocv_inds[-i-1] + 1]):
-                #    last_sig_step = prosteps[ocv_inds[-i-1] - 1]
-                #    break
-            #print(i)
             if i == len(ocv_inds) - 1:
                 last_sig_step = prosteps[ocv_inds[-1] + 1]
         else:
@@ -815,8 +801,8 @@ class AMIDR():
                     last_sig_step = prosteps[ocv_inds[-i]]
                     break    
         
-        print('First signature curve step: {}'.format(first_sig_step))
-        print('Last signature curve step: {}'.format(last_sig_step))
+        print("First signature curve step: {}".format(first_sig_step))
+        print("Last signature curve step: {}".format(last_sig_step))
         
         sigdf = self.df.loc[(self.df['Prot_step'] >= first_sig_step) & (self.df['Prot_step'] <= last_sig_step)]
         
@@ -879,7 +865,6 @@ class AMIDR():
             
             # if the next step is the start of sigcurves, plot sigcurves
             if fullsteps[i] == self.sc_stepnums[0] - 1:
-                #print('plotting sig curves...')
                 axs[1].plot(self.sigdf['Capacity']*1000/self.mass, self.sigdf['Label Potential'],
                         color = 'red',
                         label = 'Signature Curves')
@@ -901,7 +886,7 @@ class AMIDR():
     
     def plot_caps(self, export_data = None, export_fig = True):
         
-        if not(export_data is None): ('There is no data to export. Feel free to neglect this argument.')
+        if not(export_data is None): print("There is no data to export. Feel free to neglect this argument.")
         
         fig, axs = plt.subplots(nrows = 2, ncols = 1, sharex = True, figsize = (3, 6), gridspec_kw = {'hspace':0.0})
         colors = plt.get_cmap('viridis')(np.linspace(0, 1, self.nvolts))
@@ -938,16 +923,14 @@ class AMIDR():
     def _parse_sigcurves(self):
 
         sigs = self.sigdf.loc[self.sigdf['Step'] != 0]
-        #capacity = sigs['Capacity'].max() - sigs['Capacity'].min()
-        #print('Specific Capacity: {} mAh'.format(capacity))
         Vstart = np.around(sigs['Label Potential'].values[0], decimals = 3)
         Vend = np.around(sigs['Label Potential'].values[-1], decimals = 3)
-        print('Starting voltage: {:.3f} V'.format(Vstart))
-        print('Ending voltage: {:.3f} V'.format(Vend))
+        print("Starting voltage: {:.3f} V".format(Vstart))
+        print("Ending voltage: {:.3f} V".format(Vend))
         
         sigsteps = sigs['Prot_step'].unique()
         nsig = len(sigsteps)
-        print('Found {} charge or discharge steps in signature curve sequences.'.format(nsig))
+        print("Found {} charge or discharge steps in signature curve sequences.".format(nsig))
         caps = []
         cumcaps = []
         volts = []
@@ -1136,10 +1119,10 @@ class AMIDR():
                         n = 0
                 
                 capacitance = abs(np.linalg.lstsq(A, y)[0][0])
-                print('Double layer capacitance found at lowest V pulse: {:.2f} nF'.format(1.0e9*capacitance))
+                print("Double layer capacitance found at lowest V pulse: {:.2f} nF".format(1.0e9*capacitance))
                 
                 rohm = np.power(10, stats.mode(np.round(np.log10(resistdrop), 2))[0])[0][0]
-                print('Logarithmic mode of ohmic resistance over all pulses: {:.2f} Ω'.format(rohm))
+                print("Logarithmic mode of ohmic resistance over all pulses: {:.2f} Ω".format(rohm))
                 for i in range(nvolts):
                     dlcaps = []
                     for j in range(len(voltsAct[i])):
@@ -1185,7 +1168,7 @@ class AMIDR():
             if self.fcap_min != 0.0:
                 print("Fractional capacity exclusion cannot be applied to single-pulse AMIDR data. Data is being analyzed without fractional capacity exclusion.")
         
-        print('Found {} signature curves.'.format(nvolts))
+        print("Found {} signature curves.".format(nvolts))
         
         ivolts = np.zeros(nvolts)
         cvolts = np.zeros(nvolts)
@@ -1208,17 +1191,17 @@ class AMIDR():
             #dvolts[1:] = np.absolute(cvolts[:-1] - cvolts[1:])
             dvolts = np.absolute(ivolts - cvolts)
             if self.single_p is False:
-                print('Midpoint capacities (mAh/g): {}'.format((avg_caps*1000/self.mass)))
-                print('Cutoff voltages: {}'.format(cvolts))
-                print('Midpoint voltages: {}'.format(avg_volts))
+                print("Midpoint capacities (mAh/g): {}".format((avg_caps*1000/self.mass)))
+                print("Cutoff voltages: {}".format(cvolts))
+                print("Midpoint voltages: {}".format(avg_volts))
                 with np.printoptions(precision = 4):
-                    print('Voltage intervals widths: {}'.format(dvolts))
+                    print("Voltage intervals widths: {}".format(dvolts))
             # Make voltage interval labels for legend.
             #vlabels = ['{0:.3f} V - {1:.3f} V'.format(initcutvolt, cvolts[0])]
             #vlabels = vlabels + ['{0:.3f} V - {1:.3f} V'.format(cvolts[i], cvolts[i+1]) for i in range(nvolts-1)]
             vlabels = ['{0:.3f} V - {1:.3f} V'.format(ivolts[i], cvolts[i]) for i in range(nvolts)]
-            print('Voltage interval labels: {}'.format(vlabels))
-            print('Found {} voltage intervals.'.format(nvolts))
+            print("Voltage interval labels: {}".format(vlabels))
+            print("Found {} voltage intervals.".format(nvolts))
         
         iadj = 0
         for i in range(nvolts):    
@@ -1264,8 +1247,8 @@ class AMIDR():
             cell_label = self.cell_label + '-' + fitlabel
         
         if shape not in SHAPES:
-            print('The specified shape {0} is not supported.'.format(shape))
-            print('Supported shapes are: {0}. Defaulting to sphere.'.format(SHAPES))
+            print("The specified shape {0} is not supported.".format(shape))
+            print("Supported shapes are: {0}. Defaulting to sphere.".format(SHAPES))
             
         # Get geometric constants according to particle shape.
         if shape == 'sphere':
@@ -1310,14 +1293,8 @@ class AMIDR():
 
         for j in range(self.nvolts):
             z = np.ones(len(self.fcaps[j]))
-            #fcap = np.array(self.fcaps[j])
             fcap = np.array(self.fcaps[j])
-            #self._max_cap = self.cumcaps[j][-1]
-            #print('Max cap: {} mAh/g'.format(self._max_cap))
             rates = np.array(self.eff_rates[j])
-            #I = np.array(self.currs[j])*1000
-            #print("Currents: {} mA".format(I))
-            #self._dqdv = np.average(self.dqdV[j][-1])*1000/self.mass
             
             if self.single_p is False:
                 # selects the dqdv of C/40 discharge/charge or nearest to C/40
@@ -1328,8 +1305,6 @@ class AMIDR():
                 dqdv[j] = self.dqdv[j][0]
                 # constrains fcapadj to 1
                 fcapadj_bounds = [1.0, 1.0000001]
-
-            #print("dq/dV: {} Ah/V".format(dqdv[j]))
             
             if self.R_corr is False:
                 C = np.sum(self.ir[j])
@@ -1411,26 +1386,32 @@ class AMIDR():
             
             plt.figure(figsize = (3, 3))
             plt.semilogx(Qfit, tau_fit, 'or', markersize = 2, label = 'Experimental')
+            plt.semilogx(Q_arr, tau_sol, '-k', label = 'Model')
+            
             if max(tau_fit) < 0.01:
                 plt.ylim(0, 0.01)
             elif max(tau_fit) < 0.1:
                 plt.ylim(0, 0.1)
             else:
                 plt.ylim(0, 1)
-            plt.semilogx(Q_arr, tau_sol, '-k', label = 'Model')
+                
             plt.xlabel('$Q$')
             plt.ylabel('$τ$')
             plt.legend(loc = 'upper left', frameon = True)
+            
             if Qfit[0] < 1.0e-4 or Qfit[1] < 1.0e-3:
                 plt.xlim(1.0e-6, 1.0e0)
                 plt.xticks(10.**np.arange(-6, 1))
             else:
                 plt.xlim(1.0e-4, 1.0e2)
                 plt.xticks(10.**np.arange(-4, 3))
+                
             plt.gca().xaxis.set_minor_locator(ticker.LogLocator(subs = np.arange(1.0, 10.0) * 0.1, numticks = 10))
             plt.gca().xaxis.set_major_locator(ticker.LogLocator(numticks = 10))
             plt.gca().yaxis.set_minor_locator(ticker.AutoMinorLocator())
+            
             plt.gca().grid(which = 'minor', color = 'lightgrey')
+            
             if export_fig:
                 figname = self.dst / '{0} {1:.3f} V ({2}).jpg'.format(cell_label, self.avg_volts[j], shape)
                 if not(np.isnan(popt[0])):
@@ -1446,7 +1427,6 @@ class AMIDR():
         else:
             # get resist from pconst
             resist = pconst*self.r**2/(3600*dconst*dqdv)
-            #print("Resist: {} V/A".format(resist))
             
             # get resist from ir drop
             rdrop = []
@@ -1467,13 +1447,13 @@ class AMIDR():
             temp = ionsat_inputs[0]
             theorcap = ionsat_inputs[1]/1000*self.mass
             
-            if ionsat_inputs[2] > max(self.ivolts) or ionsat_inputs[2] < min(self.ivolts) or ionsat_inputs[4] > max(self.ivolts) or ionsat_inputs[4] < min(self.ivolts):
-                print('Voltage inputs for calculating Free-path Tracer D are out of range. Tracer D will not be calculated.')
+            if ionsat_inputs[3] > max(self.ivolts) or ionsat_inputs[3] < min(self.ivolts) or ionsat_inputs[5] > max(self.ivolts) or ionsat_inputs[5] < min(self.ivolts):
+                print("Voltage inputs for calculating Free-path Tracer D are out of range. Tracer D will not be calculated.")
             else:
-                volt1 = ionsat_inputs[2]
-                newcap1 = ionsat_inputs[3]/1000*self.mass
-                volt2 = ionsat_inputs[4]
-                newcap2 = ionsat_inputs[5]/1000*self.mass
+                newcap1 = ionsat_inputs[2]/1000*self.mass
+                volt1 = ionsat_inputs[3]
+                newcap2 = ionsat_inputs[4]/1000*self.mass
+                volt2 = ionsat_inputs[5]
                 volt1a = float('NaN')
                 volt1b = float('NaN')
                 volt2a = float('NaN')
@@ -1518,10 +1498,10 @@ class AMIDR():
             DV_df.to_excel(df_filename, index = False)
         
         with np.printoptions(precision = 3):
-            print('Fitted Dc: {}'.format(dconst))
+            print("Fitted Dc: {}".format(dconst))
             if self.single_p is False:
-                print('Standard deviations from fit: {}'.format(sigma))
-                print('Atlung fit error: {}'.format(fit_err))
+                print("Standard deviations from fit: {}".format(sigma))
+                print("Atlung fit error: {}".format(fit_err))
         
         return self.avg_volts, self.ivolts, dconst, dtconst, fit_err, cap_span, cap_max, cap_min, self.caps, self.ir, self.dvolts, pconst, dqdv, resist, self.resistdrop, self.single_p, self.R_corr, cell_label, self.mass, self.dst
         
@@ -1843,11 +1823,11 @@ class BINAVERAGE():
             for halfcyclepath in sorted(cellpath.iterdir(), reverse = True):
                 if halfcyclepath.is_dir():
                     for fitfile in halfcyclepath.iterdir():
-                        if fitfile.is_file() and "harge" + plabel + flabel + " Fitted" in str(fitfile):
-                            if "Discharge" in str(fitfile):
+                        if fitfile.is_file() and 'harge' + plabel + flabel + ' Fitted' in str(fitfile):
+                            if 'Discharge' in str(fitfile):
                                 print("Found discharge data for cell {}".format(Path(cellpath).name))
                                 halfcycle = 'Discharge'
-                            elif "Charge" in str(fitfile):
+                            elif 'Charge' in str(fitfile):
                                 print("Found charge data for cell {}".format(Path(cellpath).name))
                                 halfcycle = 'Charge'
                             else:
@@ -2209,10 +2189,10 @@ class MATCOMPARE():
     
     def __init__(self, path, mats, export_data = None, export_fig = True):
         
-        if not(export_data is None): ('There is no figure to export. Feel free to neglect this argument.')
+        if not(export_data is None): print("There is no figure to export. Feel free to neglect this argument.")
         
         if len(mats) > 4:
-            print('Can only compare up to 4 materials at once. Additional materials will not be plotted.')  
+            print("Only up to 4 materials can be compared at once. Additional materials will not be plotted.")  
         
         folder = Path(path)
         
