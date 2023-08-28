@@ -38,12 +38,14 @@ RATES = np.array([0.01, 0.05, 0.1, 0.2, 1/3, 0.5, 1, 2, 2.5, 5, 10, 20, 40, 80, 
 COLUMNS = ['Time', 'Cycle', 'Step', 'Current', 'Potential', 'Capacity', 'Prot_step']
 UNITS = ['(h)', None, None, '(mA)', '(V)', '(mAh)', None]
 
-SHAPES = ['sphere', 'plane']
+SHAPES = ['sphere']
 
 class BIOCONVERT():
     
     def __init__(self, path, form_files, d_files, c_files, cellname, export_data = True, export_fig = True):
                 
+        print("_________________________________")
+        
         # Acquire header info from first file
         all_files = []
         all_files.extend(form_files)
@@ -66,14 +68,14 @@ class BIOCONVERT():
             massUnit = massText.group(2).strip()
             if massUnit != 'mg':
                 print("Mass Unit: " + massUnit)
-                print("Please edit first file to express mass in mg so that specific capacity is accurately calculated")
+                print("Please edit first file to express mass in mg so that specific capacity is accurately calculated.\n")
             
             capacityText = re.search('Battery capacity : (\d+.?\d+) (.+)', ''.join(header))
             capacityVal = float(capacityText.group(1))
             capacityUnit = capacityText.group(2).strip()
             if capacityUnit != 'mA.h':
                 print("Capacity Unit: " + capacityUnit + "100")
-                print("Please edit first file to express capacity in mA.h so that specific capacity and rates are accurately calculated")
+                print("Please edit first file to express capacity in mA.h so that specific capacity and rates are accurately calculated.\n")
             capacityUnit = capacityUnit.replace('.h', 'Hr')
             
             startText = re.search('Technique started on : (.+)', ''.join(header))
@@ -137,7 +139,7 @@ class BIOCONVERT():
                 with open(pathFileForm, 'w') as f:
                     f.write(csvHeader)
                 
-                print("Formation data exporting to:\n" + str(pathFileForm))
+                print("Formation data exporting to:\n{}\n".format(str(pathFileForm)))
                 dfForm.to_csv(pathFileForm, mode = 'a', index = False)
             
             # Concatenate
@@ -201,9 +203,6 @@ class BIOCONVERT():
                                     dfTempD['Ewe/V'][pulseInd] = ocvFinVals['Ewe/V']
                                 else:
                                     dfTempD.drop([pulseInd], inplace = True)
-                                    
-                                    # Prints step and indice of datapoint removed [Default Commented Out]
-                                    #print(dfTempDSteps['Ns'][i+j], pulseInd)
                                 
                                 # Iterate over sets of nAvg datapoints within a CC step skipping the first and remainder datapoints
                                 if pulseInd + nAvg <= dfTempD.index[-1]:
@@ -220,10 +219,6 @@ class BIOCONVERT():
                                 # Drop all remainder datapoints
                                 nextStepInd = dfTempD[dfTempD['Ns'] == dfTempDSteps['Ns'][i+j+1]].index[0]
                                 dfTempD.drop(dfTempD.loc[pulseInd + 1:nextStepInd - 1].index, inplace = True)
-                                
-                                # Prints step and range of indices of datapoints removed [Default Commented Out]
-                                #if pulseInd + 1 != nextStepInd:
-                                    #print(dfTempDSteps['Ns'][i+j], pulseInd + 1, '-', nextStepInd - 1)
                                 
                                 j = j + 1
                     else:
@@ -280,12 +275,7 @@ class BIOCONVERT():
                 newDSteps = dfTempD.drop_duplicates(subset = ['Ns'], ignore_index = True)
                 dfTempD['Ns'].replace(newDSteps['Ns'].values, newDSteps.index+1, inplace = True)
                 dfTempDSteps['Ns'].replace(newDSteps['Ns'].values, newDSteps.index+1, inplace = True)
-                
-                # Prints dataset after all transformations [Default Commented Out]
-                #print(dfTempD)
-                #print(dfTempD.loc[9500:13570])
-                #print(dfTempDSteps[0:50], dfTempDSteps[50:100], dfTempDSteps[100:150])
-                
+                               
                 # Add last previous capacity, time, and step number to current data
                 if not(dfD.empty):
                     dfTempD['time/s'] = dfTempD['time/s'] + dfD['time/s'].iat[-1]
@@ -319,7 +309,7 @@ class BIOCONVERT():
                 with open(pathFileD, 'w') as f:
                     f.write(csvHeader)      
                     
-                print("Discharge data exporting to:\n" + str(pathFileD))
+                print("Discharge data exporting to:\n{}\n".format(str(pathFileD)))
                 dfD.to_csv(pathFileD, mode = 'a', index = False)
                 
             # Add last time, and step number to graphs
@@ -387,9 +377,6 @@ class BIOCONVERT():
                                     dfTempC['Ewe/V'][pulseInd] = ocvFinVals['Ewe/V']
                                 else:
                                     dfTempC.drop([pulseInd], inplace = True)
-                                    
-                                    # Prints step and indice of datapoint removed [Default Commented Out]
-                                    #print(dfTempCSteps['Ns'][i+j], pulseInd)
                                 
                                 # Iterate over sets of nAvg datapoints within a CC step skipping the first and remainder datapoints
                                 if pulseInd + nAvg <= dfTempC.index[-1]:
@@ -406,10 +393,6 @@ class BIOCONVERT():
                                 # Drop all remainder datapoints
                                 nextStepInd = dfTempC[dfTempC['Ns'] == dfTempCSteps['Ns'][i+j+1]].index[0]
                                 dfTempC.drop(dfTempC.loc[pulseInd + 1:nextStepInd - 1].index, inplace = True)
-                                
-                                # Prints step and range of indices of datapoints removed [Default Commented Out]
-                                #if pulseInd + 1 != nextStepInd:
-                                    #print(dfTempCSteps['Ns'][i+j], pulseInd + 1, '-', nextStepInd - 1)
                                 
                                 j = j + 1
                     else:
@@ -500,7 +483,7 @@ class BIOCONVERT():
                 with open(pathFileC, 'w') as f:
                     f.write(csvHeader)
                             
-                print("Charge data exporting to:\n" + str(pathFileC))
+                print("Charge data exporting to:\n{}\n".format(str(pathFileC)))
                 dfC.to_csv(pathFileC, mode = 'a', index = False)
             
             # Add last time, and step number to graphs
@@ -566,6 +549,7 @@ class BIOCONVERT():
         
         plt.show()
         plt.close()
+        print("")
         
         if d_files and c_files:
             dfDOCV = dfD[dfD['Step Type'] != 0].drop_duplicates(['Step Number'])
@@ -588,11 +572,14 @@ class BIOCONVERT():
             
             plt.show()
             plt.close()
+            print("")
         
 class AMIDR():
     
     def __init__(self, path, uhpc_file, single_pulse, export_data = True, export_fig = None, use_input_cap = True, 
                  capacitance_corr = False, fcap_min = 0.0, spliced = False, force2e = False, parselabel = None):
+        
+        print("_________________________________")
         
         if not(export_fig is None): ('There is no figure to export. Feel free to neglect this argument.')
         
@@ -603,7 +590,7 @@ class AMIDR():
             self.cell_label = ('.').join(uhpc_file.split('.')[0:-1])
         else:
             self.cell_label = ('.').join(uhpc_file.split('.')[0:-1]) + '-' + parselabel
-        print(self.cell_label)
+        print(self.cell_label + "\n")
         self.dst = Path(path) / self.cell_label
         # If does not exist, create dir.
         if self.dst.is_dir() is False and export_data is True:
@@ -663,7 +650,7 @@ class AMIDR():
                
         print("Working on cell: {}".format(self.cellname))
         print("Positive electrode active mass: {} g".format(self.mass))
-        print("Input cell capacity: {} Ah".format(round(self.input_cap, 10)))
+        print("Input cell capacity: {} Ah\n".format(round(self.input_cap, 10)))
         
         self.df = pd.read_csv(self.uhpc_file, header = nskip)
         
@@ -679,51 +666,42 @@ class AMIDR():
                                   'Prot.Step': 'Prot_step', 
                                   'Step Number': 'Prot_step'}, 
                                    inplace = True)
-        #print(self.df.columns)
-        #print(self.df.Step.unique())
         
         if single_pulse == True and spliced == True:
-            sys.exit("single_pulse cannot operate on spliced files. Manually clean up your spliced file and select spliced = false")
+            print("single_pulse cannot operate on spliced files. Manually clean up your spliced file and select spliced = false\n")
         
         # Add Prot_step column if column does not yet exist or spliced file is used.
         if 'Prot_step' not in self.df.columns or spliced == True:
             s = self.df.Step
             self.df['Prot_step'] = s.ne(s.shift()).cumsum() - 1
-
-        #if hline[-4:] == 'Flag':
-        #    self.df = self.df.rename(columns = {'Flag':'Prot.Step'})
-        #    i = self.df.Step
-        #    self.df['Prot.Step'] = i.ne(i.shift()).cumsum() - 1
-            
-        #self.df.columns = COLUMNS
         
         # Adjust data where time is not monotonically increasing.   
         t = self.df['Time'].values
         cap = self.df['Capacity'].values
         dt = t[1:] - t[:-1]
-        inds = np.where(dt < 0.0)[0]
-        if len(inds) > 0:
-            print("Indices being adjusted due to time non-monotonicity: {}".format(inds))
-            self.df['Time'][inds+1] = (t[inds] + t[inds+2])/2
-            self.df['Capacity'][inds+1] = (cap[inds] + cap[inds+2])/2
+        indst = np.where(dt < 0.0)[0]
+        if len(indst) > 0:
+            print("Indices being adjusted due to time non-monotonicity: {}".format(indst))
+            self.df['Time'][indst+1] = (t[indst] + t[indst+2])/2
+            self.df['Capacity'][indst+1] = (cap[indst] + cap[indst+2])/2
+            
         # Adjust data where potential is negative.
-        inds = self.df.index[self.df['Potential'] < 0.0].tolist()
-        if len(inds) > 0:
-            print("Indices being adjusted due to negative voltage: {}".format(inds))
-            self.df['Potential'][inds] = (t[inds-1] + t[inds+1])/2
+        indsn = self.df.index[self.df['Potential'] < 0.0].tolist()
+        if len(indsn) > 0:
+            print("Indices being adjusted due to negative voltage: {}".format(indsn))
+            self.df['Potential'][indsn] = (t[indsn-1] + t[indsn+1])/2
+            
+        if len(indst) > 0 or len(indsn) > 0: print("\n")
         
         if 'Label Potential' not in self.df:
             self.df['Label Potential'] = self.df['Potential'].copy()
         elif force2e:
             self.df['Potential'] = self.df['Label Potential'].copy()
-            print("3-electrode data detected. Ignoring working potential and using complete cell potential for everything. [NOT RECCOMMENDED]")
+            print("3-electrode data detected. Ignoring working potential and using complete cell potential for everything. [NOT RECCOMMENDED]\n")
         else:
-            print("3-electrode data detected. Using working potential for calculations and complete cell potential for labelling.")
-        
-        #plt.plot(self.df['Capacity'], self.df['Potential'])
+            print("3-electrode data detected. Using working potential for calculations and complete cell potential for labelling.\n")
         
         self.sigdf = self._find_sigcurves()
-        #plt.plot(self.sigdf['Capacity'], self.sigdf['Potential'])
         self.sc_stepnums = self.sigdf['Prot_step'].unique()
         self.capacity = self.sigdf['Capacity'].max() - self.sigdf['Capacity'].min()
         self.spec_cap = self.capacity / self.mass
@@ -731,7 +709,7 @@ class AMIDR():
             self.capacity = self.input_cap
         else:
             print("Specific Capacity achieved by signature curves: {0:.2f} mAh/g".format(self.spec_cap*1000))
-            print("Using {:.8f} Ah to compute rates.".format(self.capacity))
+            print("Using {:.8f} Ah to compute rates.\n".format(self.capacity))
 
         self.caps, self.cumcaps, self.volts, self.fcaps, self.rates, self.eff_rates, self.currs, \
         self.ir, self.dqdv, self.resistdrop, self.icaps, self.avg_caps, self.ivolts, self.cvolts, \
@@ -754,7 +732,7 @@ class AMIDR():
                                                     'Fractional Capacity': self.fcaps[i],
                                                     'qi/I': self.eff_rates[i]})
                 caprate_df.to_excel(writer, sheet_name = self.vlabels[i], index = False)
-            print("Parsed data exporting to:\n" + str(caprate_fname))
+            print("Parsed data exporting to:\n{0}\n".format(str(caprate_fname)))
             writer.save()
             writer.close()
 
@@ -801,136 +779,22 @@ class AMIDR():
                     last_sig_step = prosteps[ocv_inds[-i]]
                     break    
         
-        print("First signature curve step: {}".format(first_sig_step))
-        print("Last signature curve step: {}".format(last_sig_step))
+        print("Signature curve steps: {0} - {1}".format(first_sig_step, last_sig_step))
         
         sigdf = self.df.loc[(self.df['Prot_step'] >= first_sig_step) & (self.df['Prot_step'] <= last_sig_step)]
         
         return sigdf
     
-    def plot_protocol(self, xlims = None, ylims = None, export_data = None, export_fig = True):
-        
-        if not(export_data is None): ('There is no data to export. Feel free to neglect this argument.')
-
-        fig, axs = plt.subplots(nrows = 1, ncols = 2, sharey = True,
-                                figsize = (6, 3), gridspec_kw = {'wspace':0.0})
-        axs[0].plot(self.df['Time'], self.df['Label Potential'], 'k-')
-        axs[0].xaxis.set_minor_locator(ticker.AutoMinorLocator())
-        axs[0].yaxis.set_minor_locator(ticker.AutoMinorLocator())
-        axs[0].grid(which = 'minor', color = 'lightgrey')
-        axs[0].set_xlabel('Time (h)')
-        axs[0].set_ylabel('Voltage (V)')
-        axs[1].set_xlabel('Specific Capacity \n (mAh/g)')
-        axs[1].tick_params(which = 'both', axis = 'y', length = 0)
-        axs[1].xaxis.set_minor_locator(ticker.AutoMinorLocator())
-        axs[1].grid(which = 'minor', color = 'lightgrey')
-        #axs[0].tick_params(direction = 'in', top = True, right = True)
-        
-        # plot signature curves first if first
-        if self.sc_stepnums[0] == 1:
-            axs[1].plot(self.sigdf['Capacity']*1000/self.mass, self.sigdf['Label Potential'],
-                color = 'red',
-                label = 'Signature Curves')
-        
-        stepnums = self.df['Prot_step'].unique()
-        #print(stepnums)
-        fullsteps = np.setdiff1d(stepnums, self.sc_stepnums)
-        #print(fullsteps)
-        #print(self.sc_stepnums)
-        # Need to set prop cycle
-        colors = plt.get_cmap('viridis')(np.linspace(0, 1, len(fullsteps)+1))
-        c = 0
-        for i in range(len(fullsteps)):
-
-            stepdf = self.df.loc[self.df['Prot_step'] == fullsteps[i]]
-            avgcurr = stepdf['Current'].mean()
-            if avgcurr > 0.0:
-                cyclabel = 'Charge'
-            else:
-                cyclabel = 'Discharge'
-                
-            if stepdf['Step'].values[0] == 0:
-                label = 'OCV'
-            else:
-                avgcurr = np.absolute(avgcurr)
-                minarg = np.argmin(np.absolute(RATES - self.capacity/avgcurr))
-                rate = RATES[minarg]
-                label = 'C/{0} {1}'.format(int(rate), cyclabel)
-            
-            axs[1].plot(stepdf['Capacity']*1000/self.mass, stepdf['Label Potential'],
-                        color = colors[c],
-                        label = label)
-            
-            c = c + 1
-            
-            # if the next step is the start of sigcurves, plot sigcurves
-            if fullsteps[i] == self.sc_stepnums[0] - 1:
-                axs[1].plot(self.sigdf['Capacity']*1000/self.mass, self.sigdf['Label Potential'],
-                        color = 'red',
-                        label = 'Signature Curves')
-        
-        plt.legend(bbox_to_anchor = (1.0, 0.5), loc = 'center left')
-        
-        if xlims is not None:
-            axs[1].set_xlim(xlims[0], xlims[1])
-        if ylims is not None:
-            axs[0].set_ylim(ylims[0], ylims[1])
-        
-        if export_fig:
-            figname = self.dst / '{} Protocol.jpg'.format(self.cell_label)
-            print(figname)
-            plt.savefig(self.dst / '{} Protocol.jpg'.format(self.cell_label), bbox_inches = 'tight')
-            
-        plt.show()
-        plt.close()
-    
-    def plot_caps(self, export_data = None, export_fig = True):
-        
-        if not(export_data is None): print("There is no data to export. Feel free to neglect this argument.")
-        
-        fig, axs = plt.subplots(nrows = 2, ncols = 1, sharex = True, figsize = (3, 6), gridspec_kw = {'hspace':0.0})
-        colors = plt.get_cmap('viridis')(np.linspace(0, 1, self.nvolts))
-        
-        for i in range(self.nvolts):
-            axs[0].semilogx(self.eff_rates[i], self.cumcaps[i],
-                            color = colors[i])
-            axs[1].semilogx(self.eff_rates[i], self.fcaps[i],
-                            color = colors[i], label = self.vlabels[i])
-        
-        if self.single_p:
-            axs[1].set_xlabel('$q_{i}/I$ (h)')
-        else:
-            axs[1].set_xlabel('n$\mathregular{_{eff}}$ in C/n$\mathregular{_{eff}}$')
-        axs[1].set_ylabel('$τ$')
-        axs[0].set_ylabel('Specific Capacity \n (mAh/g)')
-        axs[1].tick_params(axis = 'x', length = 0)
-        axs[0].xaxis.set_minor_locator(ticker.LogLocator(subs = np.arange(1.0, 10.0) * 0.1, numticks = 10))
-        axs[0].xaxis.set_major_locator(ticker.LogLocator(numticks = 10))
-        axs[0].yaxis.set_minor_locator(ticker.AutoMinorLocator())
-        axs[0].grid(which = 'minor', color = 'lightgrey')
-        axs[1].yaxis.set_minor_locator(ticker.AutoMinorLocator())
-        axs[1].grid(which = 'minor', color = 'lightgrey')
-        plt.legend(bbox_to_anchor = (1.0, 1.0), loc = 'center left', ncol = 1 + self.nvolts//25)
-        
-        if export_fig:
-            figname = self.dst / '{} Parsed.jpg'.format(self.cell_label)
-            print(figname)
-            plt.savefig(figname, bbox_inches = 'tight')
-
-        plt.show()
-        plt.close()
-
     def _parse_sigcurves(self):
 
         sigs = self.sigdf.loc[self.sigdf['Step'] != 0]
         Vstart = np.around(sigs['Label Potential'].values[0], decimals = 3)
         Vend = np.around(sigs['Label Potential'].values[-1], decimals = 3)
-        print("Starting voltage: {:.3f} V".format(Vstart))
-        print("Ending voltage: {:.3f} V".format(Vend))
+        print("Voltages: {:.3f} V - {:.3f} V".format(Vstart, Vend))
         
         sigsteps = sigs['Prot_step'].unique()
         nsig = len(sigsteps)
-        print("Found {} charge or discharge steps in signature curve sequences.".format(nsig))
+        print("Found {} pulse steps in signature curves.\n".format(nsig))
         caps = []
         cumcaps = []
         volts = []
@@ -974,15 +838,11 @@ class AMIDR():
                     
                 # determine dqdv based on the measurements before the voltage cutoff
                 diffq = (pulsecaps[cvoltind-2] - pulsecaps[cvoltind-1]) / (pulsevolts[cvoltind-2] - pulsevolts[cvoltind-1])
-                
-                #if (np.amax(pulsecaps) - np.amin(pulsecaps))/self.mass < 5e-5:
-                #    continue
             
                 if caps == []:
                     caps.append([np.amax(pulsecaps) - np.amin(pulsecaps)])
                     volts.append([np.amax(pulsevolts) - np.amin(pulsevolts)])
                     rates.append([RATES[minarg]])
-                    #initcutvolt = np.around(pulsevolts[0], decimals = 3)
                     initcap.append([pulsecaps[0]])
                     cutcap.append([pulsecaps[cvoltind]])
                     initvolts.append([pulsevolts[0]])
@@ -992,7 +852,6 @@ class AMIDR():
                     dqdv.append([diffq])
                     resistdrop.append([ir[-1][-1]/currs[-1][-1]])
                 else:
-                    #if np.amax(currents) < currs[-1][-1]:
                     if pulsevolts[cvoltind] == cutvolts[-1][-1]:
                         caps[-1].append(np.amax(pulsecaps) - np.amin(pulsecaps))
                         volts[-1].append(np.amax(pulsevolts) - np.amin(pulsevolts))
@@ -1006,7 +865,6 @@ class AMIDR():
                     else:
                         if np.absolute(pulsevolts[-2] - cutvolts[-1][-1]) < 0.001:
                             continue
-                        #print(np.average(currents), pulsevolts[-2])
                         caps.append([np.amax(pulsecaps) - np.amin(pulsecaps)])
                         volts.append([np.amax(pulsevolts) - np.amin(pulsevolts)])
                         rates.append([RATES[minarg]])
@@ -1030,6 +888,7 @@ class AMIDR():
                 # i.e., voltage cutoff was reached immediately.
                 inds = np.where(fcaps[i] < self.fcap_min)[0]
                 if len(inds) > 0:
+                    print("{0} Pulse(s) to {1} removed due to being below fcap min.\n".format(eff_rates[i][inds], cutvolts[i][inds]))
                     caps[i] = np.delete(caps[i], inds)
                     volts[i] = np.delete(volts[i], inds)
                     cumcaps[i] = np.delete(cumcaps[i], inds)
@@ -1042,10 +901,9 @@ class AMIDR():
                     ir[i] = np.delete(ir[i], inds)
                     dqdv[i] = np.delete(dqdv[i], inds)
                     resistdrop[i] = np.delete(resistdrop[i], inds)
-                    print("Current removed due to being below fcap min")
         
             if self.capacitance_corr == True:
-                print("Capacitance correction cannot be applied to multi-pulse AMID data. Data is being analyzed without capacitance correction.")
+                print("Capacitance correction cannot be applied to multi-pulse AMID data. Data is being analyzed without capacitance correction.\n")
         else:
             # idcaps is the idealized capacity for a given voltage based upon dqdv
             # cumcurrs is the cumulative averge current for determining where C should be calculated
@@ -1122,7 +980,7 @@ class AMIDR():
                 print("Double layer capacitance found at lowest V pulse: {:.2f} nF".format(1.0e9*capacitance))
                 
                 rohm = np.power(10, stats.mode(np.round(np.log10(resistdrop), 2))[0])[0][0]
-                print("Logarithmic mode of ohmic resistance over all pulses: {:.2f} Ω".format(rohm))
+                print("Logarithmic mode of ohmic resistance over all pulses: {:.2f} Ω\n".format(rohm))
                 for i in range(nvolts):
                     dlcaps = []
                     for j in range(len(voltsAct[i])):
@@ -1143,7 +1001,7 @@ class AMIDR():
                         if caps[i][j] < 0:
                             caps[i][j] = 0
                     
-                    idcaps[i] = idcaps[i] - dlcaps #- dqdv[i][0]*currs[i]*rohm 
+                    idcaps[i] = idcaps[i] - dlcaps
                     # if idcaps is calculated as negative or zero, this datapoint is effectively thrown out (caps set to nan)
                     for j in range(len(caps[i])):
                         if idcaps[i][j] <= 0:
@@ -1166,9 +1024,7 @@ class AMIDR():
                         eff_rates[i][-j - 1] = eff_rates[i][-j]
                         
             if self.fcap_min != 0.0:
-                print("Fractional capacity exclusion cannot be applied to single-pulse AMIDR data. Data is being analyzed without fractional capacity exclusion.")
-        
-        print("Found {} signature curves.".format(nvolts))
+                print("Fractional capacity exclusion cannot be applied to single-pulse AMIDR data. Data is being analyzed without fractional capacity exclusion.\n")
         
         ivolts = np.zeros(nvolts)
         cvolts = np.zeros(nvolts)
@@ -1182,26 +1038,21 @@ class AMIDR():
         
         with np.printoptions(precision = 3):
             avg_caps = (icaps + ccaps)/2
-            # Get midpoint voltage for each range.
-            #avg_volts[0] = (initcutvolt + cvolts[0])/2
-            #avg_volts[1:] = (cvolts[:-1] + cvolts[1:])/2
             avg_volts = (ivolts + cvolts)/2                
             dvolts = np.zeros(nvolts)
-            #dvolts[0] = np.absolute(initcutvolt - cvolts[0])
-            #dvolts[1:] = np.absolute(cvolts[:-1] - cvolts[1:])
             dvolts = np.absolute(ivolts - cvolts)
+            vlabels = ['{0:.3f} V - {1:.3f} V'.format(ivolts[i], cvolts[i]) for i in range(nvolts)]
             if self.single_p is False:
+                print("Found {} voltage intervals.".format(nvolts))
                 print("Midpoint capacities (mAh/g): {}".format((avg_caps*1000/self.mass)))
                 print("Cutoff voltages: {}".format(cvolts))
                 print("Midpoint voltages: {}".format(avg_volts))
                 with np.printoptions(precision = 4):
                     print("Voltage intervals widths: {}".format(dvolts))
-            # Make voltage interval labels for legend.
-            #vlabels = ['{0:.3f} V - {1:.3f} V'.format(initcutvolt, cvolts[0])]
-            #vlabels = vlabels + ['{0:.3f} V - {1:.3f} V'.format(cvolts[i], cvolts[i+1]) for i in range(nvolts-1)]
-            vlabels = ['{0:.3f} V - {1:.3f} V'.format(ivolts[i], cvolts[i]) for i in range(nvolts)]
-            print("Voltage interval labels: {}".format(vlabels))
-            print("Found {} voltage intervals.".format(nvolts))
+                print("Voltage interval labels: {}\n".format(vlabels))
+            else:
+                print("Pulse Labels: {}\n".format(vlabels))
+
         
         iadj = 0
         for i in range(nvolts):    
@@ -1234,9 +1085,129 @@ class AMIDR():
 
         return speccaps, speccumcaps, volts, fcaps, rates, eff_rates, currs, ir, dqdv, resistdrop, icaps, avg_caps, ivolts, cvolts, avg_volts, dvolts, vlabels 
        
+    def plot_protocol(self, xlims = None, ylims = None, export_data = None, export_fig = True):
+        
+        print("_________________________________")
+        
+        if not(export_data is None): ('There is no data to export. Feel free to neglect this argument.')
+
+        fig, axs = plt.subplots(nrows = 1, ncols = 2, sharey = True,
+                                figsize = (6, 3), gridspec_kw = {'wspace':0.0})
+        axs[0].plot(self.df['Time'], self.df['Label Potential'], 'k-')
+        axs[0].xaxis.set_minor_locator(ticker.AutoMinorLocator())
+        axs[0].yaxis.set_minor_locator(ticker.AutoMinorLocator())
+        axs[0].grid(which = 'minor', color = 'lightgrey')
+        axs[0].set_xlabel('Time (h)')
+        axs[0].set_ylabel('Voltage (V)')
+        axs[1].set_xlabel('Specific Capacity \n (mAh/g)')
+        axs[1].tick_params(which = 'both', axis = 'y', length = 0)
+        axs[1].xaxis.set_minor_locator(ticker.AutoMinorLocator())
+        axs[1].grid(which = 'minor', color = 'lightgrey')
+        #axs[0].tick_params(direction = 'in', top = True, right = True)
+        
+        # plot signature curves first if first
+        if self.sc_stepnums[0] == 1:
+            axs[1].plot(self.sigdf['Capacity']*1000/self.mass, self.sigdf['Label Potential'],
+                color = 'red',
+                label = 'Signature Curves')
+        
+        stepnums = self.df['Prot_step'].unique()
+        #print(stepnums)
+        fullsteps = np.setdiff1d(stepnums, self.sc_stepnums)
+        #print(fullsteps)
+        #print(self.sc_stepnums)
+        # Need to set prop cycle
+        colors = plt.get_cmap('viridis')(np.linspace(0, 1, len(fullsteps)+1))
+        c = 0
+        for i in range(len(fullsteps)):
+
+            stepdf = self.df.loc[self.df['Prot_step'] == fullsteps[i]]
+            avgcurr = stepdf['Current'].mean()
+            if avgcurr > 0.0:
+                cyclabel = 'Charge'
+            else:
+                cyclabel = 'Discharge'
+                
+            if stepdf['Step'].values[0] == 0:
+                label = 'OCV'
+            else:
+                avgcurr = np.absolute(avgcurr)
+                minarg = np.argmin(np.absolute(RATES - self.capacity/avgcurr))
+                rate = RATES[minarg]
+                label = 'C/{0} {1}'.format(int(rate), cyclabel)
+            
+            axs[1].plot(stepdf['Capacity']*1000/self.mass, stepdf['Label Potential'],
+                        color = colors[c],
+                        label = label)
+            
+            c = c + 1
+            
+            # if the next step is the start of sigcurves, plot sigcurves
+            if fullsteps[i] == self.sc_stepnums[0] - 1:
+                axs[1].plot(self.sigdf['Capacity']*1000/self.mass, self.sigdf['Label Potential'],
+                        color = 'red',
+                        label = 'Signature Curves')
+        
+        plt.legend(bbox_to_anchor = (1.0, 0.5), loc = 'center left')
+        
+        if xlims is not None:
+            axs[1].set_xlim(xlims[0], xlims[1])
+        if ylims is not None:
+            axs[0].set_ylim(ylims[0], ylims[1])
+        
+        if export_fig:
+            figname = self.dst / '{} Protocol.jpg'.format(self.cell_label)
+            print(figname)
+            plt.savefig(self.dst / '{} Protocol.jpg'.format(self.cell_label), bbox_inches = 'tight')
+            
+        plt.show()
+        plt.close()
+        print()
+    
+    def plot_caps(self, export_data = None, export_fig = True):
+                
+        print("_________________________________")
+        
+        if not(export_data is None): print("There is no data to export. Feel free to neglect this argument.")
+        
+        fig, axs = plt.subplots(nrows = 2, ncols = 1, sharex = True, figsize = (3, 6), gridspec_kw = {'hspace':0.0})
+        colors = plt.get_cmap('viridis')(np.linspace(0, 1, self.nvolts))
+        
+        for i in range(self.nvolts):
+            axs[0].semilogx(self.eff_rates[i], self.cumcaps[i],
+                            color = colors[i])
+            axs[1].semilogx(self.eff_rates[i], self.fcaps[i],
+                            color = colors[i], label = self.vlabels[i])
+        
+        if self.single_p:
+            axs[1].set_xlabel('$q_{i}/I$ (h)')
+        else:
+            axs[1].set_xlabel('n$\mathregular{_{eff}}$ in C/n$\mathregular{_{eff}}$')
+        axs[1].set_ylabel('$τ$')
+        axs[0].set_ylabel('Specific Capacity \n (mAh/g)')
+        axs[1].tick_params(axis = 'x', length = 0)
+        axs[0].xaxis.set_minor_locator(ticker.LogLocator(subs = np.arange(1.0, 10.0) * 0.1, numticks = 10))
+        axs[0].xaxis.set_major_locator(ticker.LogLocator(numticks = 10))
+        axs[0].yaxis.set_minor_locator(ticker.AutoMinorLocator())
+        axs[0].grid(which = 'minor', color = 'lightgrey')
+        axs[1].yaxis.set_minor_locator(ticker.AutoMinorLocator())
+        axs[1].grid(which = 'minor', color = 'lightgrey')
+        plt.legend(bbox_to_anchor = (1.0, 1.0), loc = 'center left', ncol = 1 + self.nvolts//25)
+        
+        if export_fig:
+            figname = self.dst / '{} Parsed.jpg'.format(self.cell_label)
+            print(figname)
+            plt.savefig(figname, bbox_inches = 'tight')
+
+        plt.show()
+        plt.close()
+        print()
+
     def fit_atlung(self, r, R_corr, ionsat_inputs = [], micR_input = 4.9, ftol = 5e-14, D_bounds = [1e-17, 1e-8], D_guess = 1.0e-11, 
                    fcapadj_bounds = [1.0, 1.5], fcapadj_guess = 1.0, P_bounds = [1e-6, 1e1], P_guess = 1.0e-2, remove_out_of_bounds = True,
                    shape = 'sphere', nalpha = 4000, nQ = 4000, export_data = True, export_fig = True, fitlabel = None):
+
+        print("_________________________________")
 
         self.r = r
         self.R_corr = R_corr
@@ -1249,6 +1220,7 @@ class AMIDR():
         if shape not in SHAPES:
             print("The specified shape {0} is not supported.".format(shape))
             print("Supported shapes are: {0}. Defaulting to sphere.".format(SHAPES))
+            shape = 'sphere'
             
         # Get geometric constants according to particle shape.
         if shape == 'sphere':
@@ -1362,8 +1334,6 @@ class AMIDR():
                            method = 'trf', max_nfev = 5000, x_scale = [1e-11, 1.0],
                            ftol = ftol, xtol = None, gtol = None, loss = 'soft_l1', f_scale = 1.0)
             
-            #(Q_arr, tau_sol, '-k', label = 'Atlung - {}'.format(shape))
-            
             sigma[j] = np.sqrt(np.diag(pcov))[0]
             dconst[j] = 10**popt[0]
             Qfit = 3600*rates*dconst[j]/r**2
@@ -1419,8 +1389,10 @@ class AMIDR():
             
             plt.close()
             
+        print()
+            
         if export_fig:
-            print("Figures not shown saved to:\n" + str(self.dst))
+            print("Figures not shown saved in folder:\n{0}\n".format(str(self.dst)))
     
         if R_corr is False:
             DV_df = pd.DataFrame(data = {'Voltage': self.avg_volts, 'D': dconst})
@@ -1448,7 +1420,7 @@ class AMIDR():
             theorcap = ionsat_inputs[1]/1000*self.mass
             
             if ionsat_inputs[3] > max(self.ivolts) or ionsat_inputs[3] < min(self.ivolts) or ionsat_inputs[5] > max(self.ivolts) or ionsat_inputs[5] < min(self.ivolts):
-                print("Voltage inputs for calculating Free-path Tracer D are out of range. Tracer D will not be calculated.")
+                print("Voltage inputs for calculating Free-path Tracer D are out of range. Tracer D will not be calculated.\n")
             else:
                 newcap1 = ionsat_inputs[2]/1000*self.mass
                 volt1 = ionsat_inputs[3]
@@ -1494,7 +1466,7 @@ class AMIDR():
 
         if export_data:
             df_filename = self.dst / '{0} Fitted ({1}).xlsx'.format(cell_label, shape)
-            print("Fitted data exporting to:\n" + str(df_filename))
+            print("Fitted data exporting to:\n{}\n".format(str(df_filename)))
             DV_df.to_excel(df_filename, index = False)
         
         with np.printoptions(precision = 3):
@@ -1503,9 +1475,13 @@ class AMIDR():
                 print("Standard deviations from fit: {}".format(sigma))
                 print("Atlung fit error: {}".format(fit_err))
         
+        print()
+        
         return self.avg_volts, self.ivolts, dconst, dtconst, fit_err, cap_span, cap_max, cap_min, self.caps, self.ir, self.dvolts, pconst, dqdv, resist, self.resistdrop, self.single_p, self.R_corr, cell_label, self.mass, self.dst
         
     def make_summary_graph(self, fit_data, export_data = None, export_fig = True):
+        
+        print("_________________________________")
         
         if not(export_data is None): ('There is no figure to export. Feel free to neglect this argument.')
         
@@ -1732,6 +1708,7 @@ class AMIDR():
             
         plt.show()
         plt.close()
+        print()
 
     def _spheres(self, X, logD, c_max):
         
@@ -1793,6 +1770,8 @@ class AMIDR():
 class BINAVERAGE():
     
     def __init__(self, path, cells, matname, binsize = 0.025, mincapspan = 0.5, maxdqdVchange = 2, export_data = True, export_fig = True, parselabel = None, fitlabel = None):
+        
+        print("_________________________________")
         
         # Create new folder if necessary
         if parselabel == None:
@@ -1900,7 +1879,7 @@ class BINAVERAGE():
                             if export_data:
                                 filepath = folder / '{0} {1} {2}{3}{4} Filtered.xlsx'.format(cell, matname, halfcycle, plabel, flabel)
                                 
-                                print("Filtered data exporting to:\n" + str(filepath))
+                                print("Filtered data exporting to:\n" + str(filepath) + "\n")
                                 
                                 writer = pd.ExcelWriter(filepath)
                                 dfnew[keep].to_excel(writer, index = False)
@@ -1954,6 +1933,7 @@ class BINAVERAGE():
             
         plt.show()
         plt.close()
+        print()
         
         # Establish bins and output dataframes
         firstbinnum = int(min(min(df['Voltage (V)']), min(df['Initial Voltage (V)']))//binsize)
@@ -2111,6 +2091,7 @@ class BINAVERAGE():
             
         plt.show()
         plt.close()
+        print()
         
         # Plot bin averaged all
         fig, axs = plt.subplots(ncols = 2, nrows = 3, figsize = (6, 7.5), sharex = 'col', sharey = 'row',
@@ -2164,6 +2145,7 @@ class BINAVERAGE():
             
         plt.show()
         plt.close()
+        print()
         
         # Create data files
         if export_data:
@@ -2176,7 +2158,7 @@ class BINAVERAGE():
             
             filepath = folder / '{0}{1}{2} ({3}).xlsx'.format(matname, plabel, flabel, ', '.join(cells))
             
-            print("Bin averaged data exporting to:\n" + str(filepath))
+            print("Bin averaged data exporting to:\n" + str(filepath) + "\n")
             
             writer = pd.ExcelWriter(filepath)
             dfO.to_excel(writer, sheet_name = 'All', index = False)
@@ -2188,6 +2170,8 @@ class BINAVERAGE():
 class MATCOMPARE():
     
     def __init__(self, path, mats, export_data = None, export_fig = True):
+        
+        print("_________________________________")
         
         if not(export_data is None): print("There is no figure to export. Feel free to neglect this argument.")
         
@@ -2238,7 +2222,7 @@ class MATCOMPARE():
                     if i > 3:
                         break
                     
-                    print("Found data for material: {}".format(filepath))
+                    print("Found data for {}".format(Path(filepath).name))
                     df = pd.read_excel(filepath, sheet_name = 'All')
                     
                     # Plot dataframe
@@ -2258,6 +2242,7 @@ class MATCOMPARE():
                     i = i + 1
                     
         axs[1, 1].legend(frameon = True)            
+        print()
         
         if export_fig:
             figname = folder / 'Material Comparison ({0}).jpg'.format(', '.join(mats))
@@ -2266,3 +2251,4 @@ class MATCOMPARE():
             
         plt.show()
         plt.close()
+        print()
