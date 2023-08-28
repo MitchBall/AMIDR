@@ -1485,7 +1485,7 @@ class AMIDR():
                 socs = 1. - pulsecaps/theorcap
                 isocs = 1. - ipulsecaps/theorcap
                 dtconst = dconst*kB*temp*dqdv/(e*pulsecaps*(1. - pulsecaps/theorcap))
-                
+
                 if R_corr:
                     DV_df['Dt* (cm^2/s)'] = dtconst
                     DV_df['SOC'] = socs
