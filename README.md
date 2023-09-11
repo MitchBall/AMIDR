@@ -1,5 +1,5 @@
 # Instructions
-AMIDR runs on python with Jupyter Notebook. To begin, follow these instructions:
+AMIDR/AMID runs on python with Jupyter Notebook. To begin, follow these instructions:
 
 1. Download Anaconda at https://www.anaconda.com/download
 2. Open up Anaconda and run Jupyter Notebook, which should open up in your browser
