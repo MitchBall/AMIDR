@@ -233,7 +233,7 @@ class BIOCONVERT():
                         
                         # Label steps after last OCV V as CC to prevent analysis (Test stopped prematurely)
                         else:
-                            print(file, 'ended prematurely. Labeling last pulse as unfinished to prevent analysis.')
+                            print(file, 'stopped mid pulse. Labelling last pulse as unfinished to prevent analysis.')
                             for i in range(len(dfTempDSteps.index)):
                                 if dfTempDSteps['mode'].iat[-i-1] == 0:
                                     dfTempDSteps['mode'].iat[-i-1] = 1
@@ -1254,6 +1254,8 @@ class AMIDR():
                 
         dconst = np.zeros(self.nvolts, dtype = float)
         dtconst = np.zeros(self.nvolts, dtype = float)
+        socs = np.zeros(self.nvolts, dtype = float)
+        isocs = np.zeros(self.nvolts, dtype = float)
         pconst = np.zeros(self.nvolts, dtype = float)
         resist = np.zeros(self.nvolts, dtype = float)
         dqdv = np.zeros(self.nvolts, dtype = float)
@@ -1262,6 +1264,10 @@ class AMIDR():
         cap_max = np.zeros(self.nvolts, dtype = float)
         cap_min = np.zeros(self.nvolts, dtype = float)
         cap_span = np.zeros(self.nvolts, dtype = float)
+        
+        socs[:] = np.nan
+        isocs[:] = np.nan
+        dtconst[:] = np.nan
 
         for j in range(self.nvolts):
             z = np.ones(len(self.fcaps[j]))
@@ -1395,7 +1401,7 @@ class AMIDR():
             print("Figures not shown saved in folder:\n{0}\n".format(str(self.dst)))
     
         if R_corr is False:
-            DV_df = pd.DataFrame(data = {'Voltage': self.avg_volts, 'D': dconst})
+            DV_df = pd.DataFrame(data = {'Voltage (V)': self.avg_volts, 'Dc (cm^2/s)': dconst})
         else:
             # get resist from pconst
             resist = pconst*self.r**2/(3600*dconst*dqdv)
@@ -1458,11 +1464,14 @@ class AMIDR():
                 isocs = 1. - ipulsecaps/theorcap
                 dtconst = dconst*kB*temp*dqdv/(e*pulsecaps*(1. - pulsecaps/theorcap))
 
-                if R_corr:
-                    DV_df['Dt* (cm^2/s)'] = dtconst
-                    DV_df['SOC'] = socs
-                    DV_df['Initial SOC'] = isocs
-                    DV_df = DV_df[['Voltage (V)', 'Initial Voltage (V)', 'SOC', 'Initial SOC', 'Dc (cm^2/s)', 'Dt* (cm^2/s)', 'P', 'dq/dV (mAh/gV)', 'Rfit (Ohm)', 'micR (Ohmcm^2)', 'Rdrop (Ohm)', 'Cap Span', 'Fit Error']]
+        DV_df['Dt* (cm^2/s)'] = dtconst
+        DV_df['SOC'] = socs
+            
+        if R_corr:
+            DV_df['Initial SOC'] = isocs
+            DV_df = DV_df[['Voltage (V)', 'Initial Voltage (V)', 'SOC', 'Initial SOC', 'Dc (cm^2/s)', 'Dt* (cm^2/s)', 'P', 'dq/dV (mAh/gV)', 'Rfit (Ohm)', 'micR (Ohmcm^2)', 'Rdrop (Ohm)', 'Cap Span', 'Fit Error']]
+        else:
+            DV_df = DV_df[['Voltage (V)', 'SOC', 'Dc (cm^2/s)', 'Dt* (cm^2/s)']]
 
         if export_data:
             df_filename = self.dst / '{0} Fitted ({1}).xlsx'.format(cell_label, shape)
@@ -1470,8 +1479,8 @@ class AMIDR():
             DV_df.to_excel(df_filename, index = False)
         
         with np.printoptions(precision = 3):
-            print("Fitted Dc: {}".format(dconst))
             if self.single_p is False:
+                print("Fitted Dc: {}".format(dconst))
                 print("Standard deviations from fit: {}".format(sigma))
                 print("Atlung fit error: {}".format(fit_err))
         
@@ -1769,7 +1778,7 @@ class AMIDR():
         
 class BINAVERAGE():
     
-    def __init__(self, path, cells, matname, binsize = 0.025, mincapspan = 0.5, maxdqdVchange = 2, export_data = True, export_fig = True, parselabel = None, fitlabel = None):
+    def __init__(self, path, cells, matname, binsize = 0.025, mincap = 0.5, maxdqdVchange = 2, export_data = True, export_fig = True, parselabel = None, fitlabel = None):
         
         print("_________________________________")
         
@@ -1825,7 +1834,7 @@ class BINAVERAGE():
                                         ((dfnew.set_index(dfnew.index + 1)/dfnew)['dq/dV (mAh/gV)'] > 0) & \
                                         ((dfnew.set_index(dfnew.index - 1)/dfnew)['dq/dV (mAh/gV)'] < maxdqdVchange) & \
                                         ((dfnew.set_index(dfnew.index - 1)/dfnew)['dq/dV (mAh/gV)'] > 0))[1:-1]
-                            badcapspan = dfnew['Cap Span'] < mincapspan
+                            badcapspan = dfnew['Cap Span'] < mincap
                             keep = ~(baddqdv|badcapspan)
                             
                             # Save good fits
@@ -1898,8 +1907,8 @@ class BINAVERAGE():
         axs[0, 0].semilogy([], [], 'b.:', label = 'Ch $D_{t}^{*}$')
         axs[0, 0].legend(frameon = True, ncol = 2)
         
-        axs[0, 1].semilogy([], [], marker = '4', color = 'grey', linestyle = 'None', label = '> Max $Δdq/dV$ ($D_{c}$)')
-        axs[0, 1].semilogy([], [], marker = '3', color = 'grey', linestyle = 'None', label = '< Min $τ$ Span ($D_{c}$)')
+        axs[0, 1].semilogy([], [], marker = '4', color = 'grey', linestyle = 'None', label = '$Δdq/dV$ > ' + str(maxdqdVchange) + ' ($D_{c}$)')
+        axs[0, 1].semilogy([], [], marker = '3', color = 'grey', linestyle = 'None', label = 'Max $τ$ < ' + str(mincap) + ' ($D_{c}$)')
         axs[0, 1].legend(frameon = True)
         axs[0, 1].invert_xaxis()
         
@@ -1907,8 +1916,8 @@ class BINAVERAGE():
         axs[1, 0].semilogy([], [], 'bx-', label = 'Ch')
         axs[1, 0].legend(frameon = True)
         
-        axs[1, 1].semilogy([], [], marker = '4', color = 'grey', linestyle = 'None', label = '> Max $Δdq/dV$')
-        axs[1, 1].semilogy([], [], marker = '3', color = 'grey', linestyle = 'None', label = '< Min $τ$ Span')
+        axs[1, 1].semilogy([], [], marker = '4', color = 'grey', linestyle = 'None', label = '$Δdq/dV$ > ' + str(maxdqdVchange) + ' ($D_{c}$)')
+        axs[1, 1].semilogy([], [], marker = '3', color = 'grey', linestyle = 'None', label = 'Max $τ$ < ' + str(mincap) + ' ($D_{c}$)')
         axs[1, 1].legend(frameon = True)
         
         axs[0, 0].xaxis.set_minor_locator(ticker.AutoMinorLocator())
