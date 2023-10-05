@@ -2249,7 +2249,7 @@ class MATCOMPARE():
         axs[2, 0].grid(which = 'minor', color = 'lightgrey')
         axs[2, 1].grid(which = 'minor', color = 'lightgrey') 
         
-        colors = ['r', 'g', 'b', 'k']
+        colors = ['r', 'magenta', 'b', 'k']
         
         # Find and read file data into dataframes
         i = 0
