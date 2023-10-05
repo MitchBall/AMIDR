@@ -948,13 +948,11 @@ class AMIDR():
                 voltsAct.append(pulsevolts[1:])
                 
                 cumcurrs.append([])
+                rates.append([])
                 for j in range(len(currents[1:])):
                     cumcurrs[-1].append(np.average(currents[1:j+2]))
                     minarg = np.argmin(np.absolute(RATES - self.capacity / cumcurrs[-1][j]))
-                    if j == 0:
-                        rates.append([RATES[minarg]])
-                    else:
-                        rates[-1].append(RATES[minarg])
+                    rates[-1].append(RATES[minarg])
                 if len(pulsevolts) > 1:
                     resistdrop.append([ir[-1][-1]/currs[-1][0]])
                 else:
@@ -1028,9 +1026,18 @@ class AMIDR():
                         fcaps[i][-j - 1] = fcaps[i][-j]
                         eff_rates[i][-j - 1] = eff_rates[i][-j]
                         
-            if self.fcap_min != 0.0:
-                print("Fractional capacity exclusion cannot be applied to single-pulse AMIDR data. Data is being analyzed without fractional capacity exclusion.\n")
-        
+                # Remove data where relative capacity is small due to IR and error from pulse initiation exists.
+                inds = np.where(fcaps[i] < self.fcap_min)[0]
+                if len(inds) > 0:
+                    print("{0} datapoint(s) in pulse to {1} removed due to being below fcap min.\n".format(len(inds), cutvolts[i][0]))
+                    caps[i] = np.delete(caps[i], inds)
+                    volts[i] = np.delete(volts[i], inds)
+                    cumcaps[i] = np.delete(cumcaps[i], inds)
+                    fcaps[i] = np.delete(fcaps[i], inds)
+                    eff_rates[i] = np.delete(eff_rates[i], inds)
+                    rates[i] = np.delete(rates[i], inds)
+                    currs[i] = np.delete(currs[i], inds)
+                
         ivolts = np.zeros(nvolts)
         cvolts = np.zeros(nvolts)
         icaps = np.zeros(nvolts)
@@ -1067,8 +1074,8 @@ class AMIDR():
                 cumcaps.pop(i-iadj)
                 volts.pop(i-iadj)
                 fcaps.pop(i-iadj)
-                eff_rates.pop(i-iadj)
                 rates.pop(i-iadj)
+                eff_rates.pop(i-iadj)
                 currs.pop(i-iadj)
                 ir.pop(i-iadj)
                 dqdv.pop(i-iadj)
@@ -1076,6 +1083,7 @@ class AMIDR():
                 icaps = np.delete(icaps, i-iadj)
                 avg_caps = np.delete(avg_caps, i-iadj)
                 ivolts = np.delete(ivolts, i-iadj)
+                cvolts = np.delete(cvolts, i-iadj)
                 avg_volts = np.delete(avg_volts, i-iadj)
                 dvolts = np.delete(dvolts, i-iadj)
                 vlabels = np.delete(vlabels, i-iadj)
@@ -1104,7 +1112,7 @@ class AMIDR():
         axs[0].grid(which = 'minor', color = 'lightgrey')
         axs[0].set_xlabel('Time (h)')
         axs[0].set_ylabel('Voltage (V)')
-        axs[1].set_xlabel('Specific Capacity\n(mAh/g)')
+        axs[1].set_xlabel('Specific Capacity\n(mAh g$\mathregular{^{-1}}$)')
         axs[1].tick_params(which = 'both', axis = 'y', length = 0)
         axs[1].xaxis.set_minor_locator(ticker.AutoMinorLocator())
         axs[1].grid(which = 'minor', color = 'lightgrey')
@@ -1718,7 +1726,7 @@ class AMIDR():
             
             axs[5].plot(voltage, [i*1000/mass for i in dqdv], 'kx-')
             axs[5].set_xlabel('Voltage (V)')
-            axs[5].set_ylabel('$dq/dV$ (mAh g$\mathregular{^{-1}}$ V$\mathregular{^{-1}}$)')
+            axs[5].set_ylabel('$dq/dV$\n(mAh g$\mathregular{^{-1}}$ V$\mathregular{^{-1}}$)')
             axs[5].yaxis.set_minor_locator(ticker.AutoMinorLocator())
             axs[5].grid(which = 'minor', color = 'lightgrey')
     
@@ -1918,7 +1926,7 @@ class BINAVERAGE():
         
         axs[0, 0].set_ylabel('$D$ (cm$\mathregular{^{2}}$ s$\mathregular{^{-1}}$)')
         axs[1, 0].set_ylabel('Max $ρ_{c}$ (Ω cm$\mathregular{^{2}}$)')
-        axs[2, 0].set_ylabel('$dq/dV$ (mAh g$\mathregular{^{-1}}$ V$\mathregular{^{-1}}$)')
+        axs[2, 0].set_ylabel('$dq/dV$\n(mAh g$\mathregular{^{-1}}$ V$\mathregular{^{-1}}$)')
         axs[2, 0].set_xlabel('Voltage (V)')
         axs[2, 1].set_xlabel('Ion Saturation')
         
@@ -2093,7 +2101,7 @@ class BINAVERAGE():
         
         axs[0, 0].set_ylabel('$D$ (cm$\mathregular{^{2}}$ s$\mathregular{^{-1}}$)')
         axs[1, 0].set_ylabel('Max $ρ_{c}$ (Ω cm$\mathregular{^{2}}$)')
-        axs[2, 0].set_ylabel('$dq/dV$ (mAh g$\mathregular{^{-1}}$  V$\mathregular{^{-1}}$)')
+        axs[2, 0].set_ylabel('$dq/dV$\n(mAh g$\mathregular{^{-1}}$ V$\mathregular{^{-1}}$)')
         axs[2, 0].set_xlabel('Voltage (V)')
         axs[2, 1].set_xlabel('Ion Saturation')
         
@@ -2147,7 +2155,7 @@ class BINAVERAGE():
         
         axs[0, 0].set_ylabel('$D$ (cm$\mathregular{^{2}}$ s$\mathregular{^{-1}}$)')
         axs[1, 0].set_ylabel('Max $ρ_{c}$ (Ω cm$\mathregular{^{2}}$)')
-        axs[2, 0].set_ylabel('$dq/dV$ (mAh g$\mathregular{^{-1}}$ V$\mathregular{^{-1}}$)')
+        axs[2, 0].set_ylabel('$dq/dV$\n(mAh g$\mathregular{^{-1}}$ V$\mathregular{^{-1}}$)')
         axs[2, 0].set_xlabel('Voltage (V)')
         axs[2, 1].set_xlabel('Ion Saturation')
         
@@ -2220,7 +2228,7 @@ class MATCOMPARE():
         
         axs[0, 0].set_ylabel('$D$ (cm$\mathregular{^{2}}$ s$\mathregular{^{-1}}$)')
         axs[1, 0].set_ylabel('Max $ρ_{c}$ (Ω cm$\mathregular{^{2}}$)')
-        axs[2, 0].set_ylabel('$dq/dV$ (mAh g$\mathregular{^{-1}}$ V$\mathregular{^{-1}}$)')
+        axs[2, 0].set_ylabel('$dq/dV$\n(mAh g$\mathregular{^{-1}}$ V$\mathregular{^{-1}}$)')
         axs[2, 0].set_xlabel('Voltage (V)')
         axs[2, 1].set_xlabel('Ion Saturation')
         
