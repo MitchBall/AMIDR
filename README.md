@@ -6,11 +6,15 @@ AMIDR/AMID runs on python with Jupyter Notebook. To begin, follow these instruct
 3. Download and extract this repository if you have not done so already
 4. Navigate to "User Interface.ipynb" and continue from there
 
-# File and Folder Descriptions
+# Folder Descriptions
 - Analyzed Data: All data analyzed in the paper "AMIDR: A Complete Pulse Method for Measuring Cathode Solid-State Diffusivity".
 - Figures: All figures and their construction.
 - Fresh Data: Raw data not yet analyzed. Feel free to use this for practice.
 - Protocols: BioLogic protocols used for AMIDR testing.
+
+# File Descriptions
+- AMIDR Paper [pre-review]: Paper submitted to JES [Warning: not yet peer-reviewed]
+- AMIDR Paper SI [pre-review]: Supporting information of paper submitted to JES [Warning: not yet peer-reviewed]
 - AMIDR Review (ECS 244): Presentation given at the ECS 244 conference. This is a good introduction to the program.
 - Batch Analysis.ipynb: One-button notebook for bulk updating Analyzed Data.
 - Dev Interface.ipynb: Similar to User Interface except used for future development. Take a peak and try to guess what's happening!
