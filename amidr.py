@@ -954,7 +954,7 @@ class AMIDR():
                     minarg = np.argmin(np.absolute(RATES - self.capacity / cumcurrs[-1][j]))
                     rates[-1].append(RATES[minarg])
                 if len(pulsevolts) > 1:
-                    resistdrop.append([ir[-1][-1]/currs[-1][0]])
+                    resistdrop.append([ir[-1][0]/currs[-1][0]])
                 else:
                     resistdrop.append([np.nan])
  
