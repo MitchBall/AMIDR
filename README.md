@@ -21,3 +21,6 @@ AMIDR/AMID runs on python with Jupyter Notebook. To begin, follow these instruct
 - User Interface.ipynb: Where to perform AMIDR analysis.
 - User Interface Instructions.mp4: A short video tutorial of how to use the User Interface
 - amidr.py: Backend code for AMIDR analysis. Experienced users can feel free to edit.
+
+# Citation
+Please cite with the built-in github citation tool generated from the CITATION.cff file. A published and citable JES article will be released soon.
